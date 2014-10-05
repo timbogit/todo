@@ -185,6 +185,8 @@ func ReplaceTasks(w http.ResponseWriter, r *http.Request) error {
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return badRequest{err}
 	}
-	res := tasks.ReplaceAll(req.Tasks)
-	return json.NewEncoder(w).Encode(res)
+	log.Println("Incoming request parsed is: ", req)
+	response := struct{ Tasks []*task.Task }{tasks.ReplaceAll(req.Tasks)}
+	log.Println("Response objects are: ", response)
+	return json.NewEncoder(w).Encode(response)
 }

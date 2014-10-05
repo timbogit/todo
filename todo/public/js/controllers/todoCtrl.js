@@ -16,6 +16,14 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, tod
 			.error($scope.logError);
 	}
 
+	$scope.putTodos = function(todos) {
+		todoServer.put(todos)
+			.success(function (data) {
+					$scope.todos = data.Tasks;
+				})
+			.error($scope.logError);
+	}
+
 	$scope.logError = function(data, status) {
 		console.log('code '+status+': '+data);
 	};
@@ -53,7 +61,7 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, tod
 			title: newTodo,
 			completed: false
 		});
-		todoStorage.put(todos);
+		$scope.putTodos(todos);
 
 		$scope.newTodo = '';
 		$scope.remainingCount++;
@@ -73,7 +81,7 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, tod
 			$scope.removeTodo(todo);
 		}
 
-		todoStorage.put(todos);
+		$scope.putTodos(todos);
 	};
 
 	$scope.revertEditing = function (todo) {
@@ -84,19 +92,19 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, tod
 	$scope.removeTodo = function (todo) {
 		$scope.remainingCount -= todo.completed ? 0 : 1;
 		todos.splice(todos.indexOf(todo), 1);
-		todoStorage.put(todos);
+		$scope.putTodos(todos);
 	};
 
 	$scope.todoCompleted = function (todo) {
 		$scope.remainingCount += todo.completed ? -1 : 1;
-		todoStorage.put(todos);
+		$scope.putTodos(todos);
 	};
 
 	$scope.clearCompletedTodos = function () {
 		$scope.todos = todos = todos.filter(function (val) {
 			return !val.completed;
 		});
-		todoStorage.put(todos);
+		$scope.putTodos(todos);
 	};
 
 	$scope.markAll = function (completed) {
@@ -104,7 +112,7 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, tod
 			todo.completed = !completed;
 		});
 		$scope.remainingCount = completed ? todos.length : 0;
-		todoStorage.put(todos);
+		$scope.putTodos(todos);
 	};
 
 });
