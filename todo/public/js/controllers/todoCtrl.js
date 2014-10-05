@@ -57,6 +57,8 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, tod
 			return;
 		}
 
+		$scope.getTodos();
+		todos = $scope.todos
 		todos.push({
 			title: newTodo,
 			completed: false
@@ -73,14 +75,14 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, tod
 		$scope.originalTodo = angular.extend({}, todo);
 	};
 
-	$scope.doneEditing = function (todo) {
+	$scope.doneEditing = function (todo, index) {
 		$scope.editedTodo = null;
 		todo.title = todo.title.trim();
 
 		if (!todo.title) {
 			$scope.removeTodo(todo);
 		}
-
+		todos[index] = todo;
 		$scope.putTodos(todos);
 	};
 
@@ -95,8 +97,9 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, tod
 		$scope.putTodos(todos);
 	};
 
-	$scope.todoCompleted = function (todo) {
+	$scope.todoCompleted = function (todo,index) {
 		$scope.remainingCount += todo.completed ? -1 : 1;
+		todos[index] = todo;
 		$scope.putTodos(todos);
 	};
 
