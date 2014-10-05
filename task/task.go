@@ -66,3 +66,9 @@ func (m *TaskManager) Find(ID int64) (*Task, bool) {
 	}
 	return nil, false
 }
+
+// Replace all current tasks with the new tasks passed in
+func (m *TaskManager) ReplaceAll(tasks []*Task) []*Task {
+	m.tasks = tasks
+	return m.tasks
+}

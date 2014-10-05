@@ -102,3 +102,28 @@ func TestSaveAndFind(t *testing.T) {
 		t.Errorf("expected %v, got %v", task, nt)
 	}
 }
+
+func TestReplaceAll(t *testing.T) {
+	task := newTaskOrFatal(t, "learn Go")
+	m := NewTaskManager()
+	m.Save(task)
+
+	_, ok := m.Find(task.ID)
+	if !ok {
+		t.Errorf("didn't find task")
+	}
+
+	taskOne := newTaskOrFatal(t, "New 1")
+	taskTwo := newTaskOrFatal(t, "New 2")
+
+	newTasks := m.ReplaceAll([]*Task{taskOne, taskTwo})
+	if len(newTasks) != 2 {
+		t.Errorf("expected 2 tasks, got %v", len(newTasks))
+	}
+	if *newTasks[0] != *taskOne {
+		t.Errorf("expected task %v, got %v", taskOne, newTasks[0])
+	}
+	if *newTasks[1] != *taskTwo {
+		t.Errorf("expected task %v, got %v", taskTwo, newTasks[1])
+	}
+}

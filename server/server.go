@@ -29,6 +29,7 @@ func RegisterHandlers() {
 	r := mux.NewRouter()
 	r.HandleFunc(PathPrefix, errorHandler(ListTasks)).Methods("GET")
 	r.HandleFunc(PathPrefix, errorHandler(NewTask)).Methods("POST")
+	r.HandleFunc(PathPrefix, errorHandler(ReplaceTasks)).Methods("PUT")
 	r.HandleFunc(PathPrefix+"{id}", errorHandler(GetTask)).Methods("GET")
 	r.HandleFunc(PathPrefix+"{id}", errorHandler(UpdateTask)).Methods("PUT")
 	http.Handle(PathPrefix, r)
@@ -47,12 +48,15 @@ func errorHandler(f func(w http.ResponseWriter, r *http.Request) error) http.Han
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := f(w, r)
 		if err == nil {
+			log.Println(r)
 			return
 		}
 		switch err.(type) {
 		case badRequest:
+			log.Println(err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 		case notFound:
+			log.Println(err)
 			http.Error(w, "task not found", http.StatusNotFound)
 		default:
 			log.Println(err)
@@ -160,4 +164,27 @@ func UpdateTask(w http.ResponseWriter, r *http.Request) error {
 		return notFound{}
 	}
 	return tasks.Save(&t)
+}
+
+// ReplaceTasks handles PUT requests to /task/
+// The request body must contain a JSON encoded list of tasks.
+//
+// Example:
+//
+//   req: PUT /task/ {"Tasks": [
+//          {"id":1,"title":"learn go","completed":true},
+//          {"id":2,"title":"PROFIT!","completed":false}
+//        ]}
+//   res: 200 {"Tasks": [
+//          {"id":1,"title":"learn go","completed":true},
+//          {"id":2,"title":"PROFIT!","completed":false}
+//        ]}
+
+func ReplaceTasks(w http.ResponseWriter, r *http.Request) error {
+	req := struct{ Tasks []*task.Task }{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return badRequest{err}
+	}
+	res := tasks.ReplaceAll(req.Tasks)
+	return json.NewEncoder(w).Encode(res)
 }
