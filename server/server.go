@@ -68,8 +68,8 @@ func errorHandler(f func(w http.ResponseWriter, r *http.Request) error) http.Han
 //
 //   req: GET /task/
 //   res: 200 {"Tasks": [
-//          {"ID": 1, "Title": "Learn Go", "Done": false},
-//          {"ID": 2, "Title": "Buy bread", "Done": true}
+//          {"id": 1, "title": "Learn Go", "completed": false},
+//          {"id": 2, "title": "Buy bread", "completed": true}
 //        ]}
 func ListTasks(w http.ResponseWriter, r *http.Request) error {
 	res := struct{ Tasks []*task.Task }{tasks.All()}
@@ -82,10 +82,10 @@ func ListTasks(w http.ResponseWriter, r *http.Request) error {
 //
 // Examples:
 //
-//   req: POST /task/ {"Title": ""}
+//   req: POST /task/ {"title": ""}
 //   res: 400 empty title
 //
-//   req: POST /task/ {"Title": "Buy bread"}
+//   req: POST /task/ {"title": "Buy bread"}
 //   res: 200
 func NewTask(w http.ResponseWriter, r *http.Request) error {
 	req := struct{ Title string }{}
@@ -115,7 +115,7 @@ func parseID(r *http.Request) (int64, error) {
 // Examples:
 //
 //   req: GET /task/1
-//   res: 200 {"ID": 1, "Title": "Buy bread", "Done": true}
+//   res: 200 {"id": 1, "title": "Buy bread", "completed": true}
 //
 //   req: GET /task/42
 //   res: 404 task not found
@@ -139,10 +139,10 @@ func GetTask(w http.ResponseWriter, r *http.Request) error {
 //
 // Example:
 //
-//   req: PUT /task/1 {"ID": 1, "Title": "Learn Go", "Done": true}
+//   req: PUT /task/1 {"id": 1, "title": "Learn Go", "completed": true}
 //   res: 200
 //
-//   req: PUT /task/2 {"ID": 2, "Title": "Learn Go", "Done": true}
+//   req: PUT /task/2 {"id": 2, "title": "Learn Go", "completed": true}
 //   res: 400 inconsistent task IDs
 func UpdateTask(w http.ResponseWriter, r *http.Request) error {
 	id, err := parseID(r)

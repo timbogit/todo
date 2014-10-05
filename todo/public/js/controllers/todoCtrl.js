@@ -3,13 +3,29 @@
 
 /**
  * The main controller for the app. The controller:
- * - retrieves and persists the model via the todoStorage service
+ * - retrieves and persists the model via the todoServer factory
  * - exposes the model to the template and provides event handlers
  */
-todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, todoStorage) {
-	var todos = $scope.todos = todoStorage.get();
+todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, todoServer, todoStorage) {
+	//var todos = $scope.todos = todoStorage.get();
+	$scope.getTodos = function() {
+		todoServer.get()
+			.success(function (data) {
+					$scope.todos = data.Tasks;
+				})
+			.error($scope.logError);
+	}
+
+	$scope.logError = function(data, status) {
+		console.log('code '+status+': '+data);
+	};
+
+	$scope.todos = [];
+	$scope.getTodos();
+	var todos = $scope.todos
 
 	$scope.newTodo = '';
+
 	$scope.remainingCount = $filter('filter')(todos, {completed: false}).length;
 	$scope.editedTodo = null;
 
@@ -90,4 +106,5 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, tod
 		$scope.remainingCount = completed ? todos.length : 0;
 		todoStorage.put(todos);
 	};
+
 });
