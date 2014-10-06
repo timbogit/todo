@@ -6,8 +6,7 @@
  * - retrieves and persists the model via the todoServer factory
  * - exposes the model to the template and provides event handlers
  */
-todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, todoServer, todoStorage) {
-	//var todos = $scope.todos = todoStorage.get();
+todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, todoServer) {
 	$scope.getTodos = function() {
 		todoServer.get()
 			.success(function (data) {
