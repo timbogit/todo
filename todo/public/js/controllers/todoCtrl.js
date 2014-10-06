@@ -7,34 +7,24 @@
  * - exposes the model to the template and provides event handlers
  */
 todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, todoServer) {
-	$scope.getTodos = function() {
-		todoServer.get()
-			.success(function (data) {
-					$scope.todos = data.Tasks;
-				})
-			.error($scope.logError);
-	}
-
-	$scope.putTodos = function(todos) {
-		todoServer.put(todos)
-			.success(function (data) {
-					$scope.todos = data.Tasks;
-				})
-			.error($scope.logError);
-	}
 
 	$scope.logError = function(data, status) {
 		console.log('code '+status+': '+data);
 	};
 
 	$scope.todos = [];
-	$scope.getTodos();
-	var todos = $scope.todos
+	var todos  = [];
+	todoServer.get()
+		.success(function (data) {
+				$scope.todos = data.Tasks;
+				todos = $scope.todos;
+				$scope.newTodo = '';
+				$scope.remainingCount = $filter('filter')(todos, {completed: false}).length;
+				$scope.editedTodo = null;
 
-	$scope.newTodo = '';
+			})
+		.error($scope.logError);
 
-	$scope.remainingCount = $filter('filter')(todos, {completed: false}).length;
-	$scope.editedTodo = null;
 
 	if ($location.path() === '') {
 		$location.path('/');
@@ -50,22 +40,37 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, tod
 		$scope.allChecked = val;
 	});
 
+	$scope.putTodos = function(todos) {
+		todoServer.put(todos)
+			.success(function (data) {
+					$scope.todos = data.Tasks;
+				})
+			.error($scope.logError);
+	};
+
 	$scope.addTodo = function () {
 		var newTodo = $scope.newTodo.trim();
 		if (newTodo.length === 0) {
 			return;
 		}
 
-		$scope.getTodos();
-		todos = $scope.todos
-		todos.push({
-			title: newTodo,
-			completed: false
-		});
-		$scope.putTodos(todos);
+		todoServer.get()
+			.success(function (data) {
+					$scope.todos = data.Tasks;
+					todos = $scope.todos;
+					todos.push({
+						title: newTodo,
+						completed: false
+					});
+					$scope.putTodos(todos);
 
-		$scope.newTodo = '';
-		$scope.remainingCount++;
+					$scope.newTodo = '';
+					$scope.remainingCount = $filter('filter')(todos, {completed: false}).length;
+					$scope.editedTodo = null;
+
+				})
+			.error($scope.logError);
+
 	};
 
 	$scope.editTodo = function (todo) {
