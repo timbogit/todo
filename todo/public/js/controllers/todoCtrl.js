@@ -16,7 +16,7 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, tod
 	var todos  = [];
 	todoServer.get()
 		.success(function (data) {
-				$scope.todos = data.Tasks;
+				$scope.todos = data.Tasks || [];
 				todos = $scope.todos;
 				$scope.newTodo = '';
 				$scope.remainingCount = $filter('filter')(todos, {completed: false}).length;
@@ -56,7 +56,7 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, tod
 
 		todoServer.get()
 			.success(function (data) {
-					$scope.todos = data.Tasks;
+					$scope.todos = data.Tasks || [];
 					todos = $scope.todos;
 					todos.push({
 						title: newTodo,
