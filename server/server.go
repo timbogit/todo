@@ -13,17 +13,46 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	jwt "github.com/dgrijalva/jwt-go"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/timbogit/todo/task"
 )
 
-var tasks = task.NewTaskManager()
+const (
+	PrivKeyPath = "../keys/demo.rsa"     // openssl genrsa -out demo.rsa 1024
+	PubKeyPath  = "../keys/demo.rsa.pub" // openssl rsa -in demo.rsa -pubout > demo.rsa.pub
+	PathPrefix  = "/task/"
+	AuthPrefix  = "/login/"
+)
 
-const PathPrefix = "/task/"
+var (
+	tasks     = task.NewTaskManager()
+	signKey   []byte
+	verifyKey []byte
+)
+
+// read the key files before starting http handlers
+func init() {
+	var err error
+
+	signKey, err = ioutil.ReadFile(PrivKeyPath)
+	if err != nil {
+		log.Fatal("Error reading private key")
+		return
+	}
+
+	verifyKey, err = ioutil.ReadFile(PubKeyPath)
+	if err != nil {
+		log.Fatal("Error reading private key")
+		return
+	}
+}
 
 func RegisterHandlers() {
 	r := mux.NewRouter()
@@ -32,7 +61,11 @@ func RegisterHandlers() {
 	r.HandleFunc(PathPrefix, errorHandler(ReplaceTasks)).Methods("PUT")
 	r.HandleFunc(PathPrefix+"{id}", errorHandler(GetTask)).Methods("GET")
 	r.HandleFunc(PathPrefix+"{id}", errorHandler(UpdateTask)).Methods("PUT")
+
 	http.Handle(PathPrefix, r)
+
+	r.HandleFunc(AuthPrefix, errorHandler(CreateToken)).Methods("POST")
+	http.Handle(AuthPrefix, r)
 }
 
 // badRequest is handled by setting the status code in the reply to StatusBadRequest.
@@ -40,6 +73,12 @@ type badRequest struct{ error }
 
 // notFound is handled by setting the status code in the reply to StatusNotFound.
 type notFound struct{ error }
+
+// unauthorized is for resources that are restricted to requests with valid JWT tokens
+type unauthorized struct{ error }
+
+// forbidden is for requests for the auth endpoint if the user didn't provide a correct password
+type forbidden struct{ error }
 
 // errorHandler wraps a function returning an error by handling the error and returning a http.Handler.
 // If the error is of the one of the types defined above, it is handled as described for every type.
@@ -58,11 +97,74 @@ func errorHandler(f func(w http.ResponseWriter, r *http.Request) error) http.Han
 		case notFound:
 			log.Println(err)
 			http.Error(w, "task not found", http.StatusNotFound)
+		case unauthorized:
+			log.Println(err)
+			http.Error(w, "access restricted", http.StatusUnauthorized)
+		case forbidden:
+			log.Println(err)
+			http.Error(w, "wrong credentials", http.StatusForbidden)
 		default:
 			log.Println(err)
 			http.Error(w, "oops", http.StatusInternalServerError)
 		}
 	}
+}
+
+// CreateToken handles POST requests on /login/.
+// It accepts as `user` and `password` parameter, and it returns a JWT token
+//
+// Example:
+//
+//   req: POST /login/ {"user": "test", "password":"known"}
+//   res: 200 {
+//              "token":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJBY2Nlc3NUb2tlbiI6ImxldmVsMSIsIkN1c3RvbVVzZXJJbmZvIjp7Ik5hbWUiOiJ0ZXN0IiwiS2luZCI6Imh1bWFuIn0sImV4cCI6MTQxMzExMTEyOH0.TuQL786NjIDLwyhG60lQd-bdmd98gTxUSKaMLXDUyqJQd_MxSuK7wKbDQUSoU4ux5uLHaCPxg0H4-7zm0P0TGYlVd7UaFsxu5VakXihsYO69V_2UsdkJqtMuwGoelqqDuOAAP5vLsdQjaJ7a5KGAlE0647ozosJgEf-Ujp4pX9g"
+//            }
+func CreateToken(w http.ResponseWriter, r *http.Request) error {
+	res := struct {
+		Token string `json:"token"`
+	}{""}
+
+	req := struct {
+		User     string
+		Password string
+	}{}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return badRequest{err}
+	}
+
+	user := req.User
+	pass := req.Password
+
+	log.Printf("Authenticate: user[%s] pass[%s]\n", user, pass)
+
+	// check values
+	if user != "test" || pass != "known" {
+		return forbidden{}
+	}
+
+	// create a signer for rsa 256
+	t := jwt.New(jwt.GetSigningMethod("RS256"))
+
+	// set our claims
+	t.Claims["AccessToken"] = "level1"
+	t.Claims["CustomUserInfo"] = struct {
+		Name string
+		Kind string
+	}{user, "human"}
+
+	// set the expire time
+	// see http://tools.ietf.org/html/draft-ietf-oauth-json-web-token-20#section-4.1.4
+	t.Claims["exp"] = time.Now().Add(time.Hour * 10).Unix()
+	tokenString, err := t.SignedString(signKey)
+	if err != nil {
+		log.Printf("Token Signing error: %v\n", err)
+		return err
+	}
+
+	// store the token string in the response struct and json-ify
+	res.Token = tokenString
+	return json.NewEncoder(w).Encode(res)
 }
 
 // ListTask handles GET requests on /task.
