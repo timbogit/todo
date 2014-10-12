@@ -59,7 +59,7 @@ func RegisterHandlers() {
 	r.HandleFunc(PathPrefix, errorHandler(ListTasks)).Methods("GET")
 	r.HandleFunc(PathPrefix, errorHandler(NewTask)).Methods("POST")
 	r.HandleFunc(PathPrefix, errorHandler(ReplaceTasks)).Methods("PUT")
-	r.HandleFunc(PathPrefix+"{id}", errorHandler(GetTask)).Methods("GET")
+	r.HandleFunc(PathPrefix+"{id}", errorHandler(authHandler(GetTask))).Methods("GET")
 	r.HandleFunc(PathPrefix+"{id}", errorHandler(UpdateTask)).Methods("PUT")
 
 	http.Handle(PathPrefix, r)
@@ -106,6 +106,29 @@ func errorHandler(f func(w http.ResponseWriter, r *http.Request) error) http.Han
 		default:
 			log.Println(err)
 			http.Error(w, "oops", http.StatusInternalServerError)
+		}
+	}
+}
+
+// authHandler wraps a function returning an error by first checking for the correct JWT token and returning the same function.
+// If the JWT token is absent, or empty, it returns a function that simply returns the `unauthorized` error.
+//
+// example:
+//   req: POST /login/ {"user": "test", "password":"known"}
+//   res: 200 {
+//              "token":"f00ba7"
+//            }
+//   req: GET /task/1, header "Authorization: Bearer f00ba7"
+//   res: 200 {"id": 1, "title": "Buy bread", "completed": true}
+func authHandler(f func(w http.ResponseWriter, r *http.Request) error) func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		token, err := jwt.ParseFromRequest(r, func(token *jwt.Token) (interface{}, error) {
+			return verifyKey, nil
+		})
+		if token != nil && token.Valid {
+			return f(w, r)
+		} else {
+			return unauthorized{err}
 		}
 	}
 }
