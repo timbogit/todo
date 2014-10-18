@@ -8,8 +8,12 @@
  */
 todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, todoServer) {
 
-	$scope.logError = function(data, status) {
+	$scope.handleError = function(data, status) {
 		console.log('code '+status+': '+data);
+		//redirect to login page if unauthorized
+		if (status == 401) {
+			$location.path('/auth')
+		}
 	};
 
 	$scope.todos = [];
@@ -23,7 +27,7 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, tod
 				$scope.editedTodo = null;
 
 			})
-		.error($scope.logError);
+		.error($scope.handleError);
 
 
 	if ($location.path() === '') {
@@ -45,7 +49,7 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, tod
 			.success(function (data) {
 					$scope.todos = data.Tasks;
 				})
-			.error($scope.logError);
+			.error($scope.handleError);
 	};
 
 	$scope.addTodo = function () {
@@ -69,7 +73,7 @@ todomvc.controller('TodoCtrl', function TodoCtrl($scope, $location, $filter, tod
 					$scope.editedTodo = null;
 
 				})
-			.error($scope.logError);
+			.error($scope.handleError);
 
 	};
 

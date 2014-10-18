@@ -56,11 +56,11 @@ func init() {
 
 func RegisterHandlers() {
 	r := mux.NewRouter()
-	r.HandleFunc(PathPrefix, errorHandler(ListTasks)).Methods("GET")
-	r.HandleFunc(PathPrefix, errorHandler(NewTask)).Methods("POST")
-	r.HandleFunc(PathPrefix, errorHandler(ReplaceTasks)).Methods("PUT")
+	r.HandleFunc(PathPrefix, errorHandler(authHandler(ListTasks))).Methods("GET")
+	r.HandleFunc(PathPrefix, errorHandler(authHandler(NewTask))).Methods("POST")
+	r.HandleFunc(PathPrefix, errorHandler(authHandler(ReplaceTasks))).Methods("PUT")
 	r.HandleFunc(PathPrefix+"{id}", errorHandler(authHandler(GetTask))).Methods("GET")
-	r.HandleFunc(PathPrefix+"{id}", errorHandler(UpdateTask)).Methods("PUT")
+	r.HandleFunc(PathPrefix+"{id}", errorHandler(authHandler(UpdateTask))).Methods("PUT")
 
 	http.Handle(PathPrefix, r)
 
