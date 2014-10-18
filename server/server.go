@@ -122,6 +122,7 @@ func errorHandler(f func(w http.ResponseWriter, r *http.Request) error) http.Han
 //   res: 200 {"id": 1, "title": "Buy bread", "completed": true}
 func authHandler(f func(w http.ResponseWriter, r *http.Request) error) func(w http.ResponseWriter, r *http.Request) error {
 	return func(w http.ResponseWriter, r *http.Request) error {
+		log.Println("Request Headers are:", r.Header)
 		token, err := jwt.ParseFromRequest(r, func(token *jwt.Token) (interface{}, error) {
 			return verifyKey, nil
 		})

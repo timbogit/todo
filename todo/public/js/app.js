@@ -16,7 +16,7 @@ todomvc
       request: function(config) {
         config.headers = config.headers || {};
         if (localStorage.auth_token) {
-          config.headers.token = localStorage.auth_token;
+          config.headers.Authorization = "Bearer " + localStorage.auth_token;
         }
         return config;
       }
