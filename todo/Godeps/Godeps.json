@@ -1,0 +1,19 @@
+{
+	"ImportPath": "github.com/timbogit/todo/todo",
+	"GoVersion": "go1.3.1",
+	"Deps": [
+		{
+			"ImportPath": "github.com/dgrijalva/jwt-go",
+			"Comment": "v2.2.0",
+			"Rev": "8c45ba33b0a495057cba9985cd5dd1a3803ac7b4"
+		},
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Rev": "14f550f51af52180c2eefed15e5fd18d63c0a64a"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Rev": "e444e69cbd2e2e3e0749a2f3c717cec491552bbf"
+		}
+	]
+}

@@ -3,12 +3,13 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/timbogit/todo/server"
 )
 
 func main() {
 	server.RegisterHandlers()
-	http.Handle("/", http.FileServer(http.Dir("public")))
-	http.ListenAndServe(":8080", nil)
+	http.Handle("/", http.FileServer(http.Dir("todo/public")))
+	http.ListenAndServe(":" + os.Getenv("PORT"), nil)
 }

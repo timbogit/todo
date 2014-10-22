@@ -17,6 +17,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -25,8 +26,8 @@ import (
 )
 
 const (
-	PrivKeyPath = "../keys/demo.rsa"     // openssl genrsa -out demo.rsa 1024
-	PubKeyPath  = "../keys/demo.rsa.pub" // openssl rsa -in demo.rsa -pubout > demo.rsa.pub
+	PrivKeyPath = "keys/demo.rsa"     // openssl genrsa -out demo.rsa 1024
+	PubKeyPath  = "keys/demo.rsa.pub" // openssl rsa -in demo.rsa -pubout > demo.rsa.pub
 	PathPrefix  = "/task/"
 	AuthPrefix  = "/login/"
 )
@@ -41,9 +42,11 @@ var (
 func init() {
 	var err error
 
+	val, _ := os.Getwd()
+	log.Println("Current dir is" + val)
 	signKey, err = ioutil.ReadFile(PrivKeyPath)
 	if err != nil {
-		log.Fatal("Error reading private key")
+		log.Fatal("Error reading private key" + err.Error())
 		return
 	}
 
@@ -52,6 +55,7 @@ func init() {
 		log.Fatal("Error reading private key")
 		return
 	}
+	log.Println("Done initializing")
 }
 
 func RegisterHandlers() {
